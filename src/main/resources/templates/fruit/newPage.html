@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить новый фрукт</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Добавить новый фрукт</h1>
+    <form id="fruitForm">
+        <div class="form-group">
+            <label for="name">Название:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="color">Цвет:</label>
+            <input type="text" id="color" name="color">
+        </div>
+        <div class="form-group">
+            <label for="weight">Вес (г):</label>
+            <input type="number" id="weight" name="weight">
+        </div>
+        <div class="form-group">
+            <label for="price">Цена (руб.):</label>
+            <input type="number" id="price" name="price">
+        </div>
+        <div class="form-group">
+            <label for="type">Тип:</label>
+            <select id="type" name="type">
+                <option value="EXOTIC">Экзотический</option>
+                <option value="GOOD">Хороший</option>
+                <option value="BAD">Плохой</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button type="submit">Добавить фрукт</button>
+        </div>
+    </form>
+</div>
+<script>
+    document.getElementById('fruitForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = {
+            name: document.getElementById('name').value,
+            color: document.getElementById('color').value,
+            weight: parseFloat(document.getElementById('weight').value),
+            price: parseFloat(document.getElementById('price').value),
+            type: document.getElementById('type').value
+        };
+        fetch('/fruit/api/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Фрукт успешно добавлен!');
+                window.location.href = 'main'; // Редирект на главную страницу
+            } else {
+                alert('Ошибка при добавлении фрукта.');
+            }
+        })
+        .catch(error => console.error('Ошибка:', error));
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        .filter-section label {
+            margin-right: 10px;
+        }
+        .fruit-list {
+            list-style: none;
+            padding: 0;
+        }
+        .fruit-list li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .fruit-list li:last-child {
+            border-bottom: none;
+        }
+        .fruit-list li:hover {
+            background-color: #f9f9f9;
+        }
+        .messages {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #e7f3fe;
+            color: #31708f;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Главная страница</h1>
+    <div class="filter-section">
+        <label for="filter">Выберите тип фруктов:</label>
+        <select id="filter" onchange="loadFruits()">
+            <option value="all">Все</option>
+            <option value="exotic">Экзотические</option>
+            <option value="good">Хорошие</option>
+            <option value="bad">Плохие</option>
+        </select>
+    </div>
+    <ul class="fruit-list" id="fruitList">
+        <!-- Здесь будут отображаться фрукты -->
+    </ul>
+    <div class="messages" id="messages">
+        <!-- Здесь будут отображаться сообщения из WebSocket -->
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/fruit/new" style="padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Добавить новый фрукт</a>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new SockJS('/ws'); // Подключаемся к WebSocket
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Подключено: ' + frame);
+            stompClient.subscribe('/topic/fruits', function (message) {
+                showMessage(message.body); // Прямое использование строки
+            });
+        });
+    }
+
+    function showMessage(data) {
+        const messagesDiv = document.getElementById('messages');
+        const messageElement = document.createElement('div');
+        messageElement.textContent = `Новое сообщение: ${data}`; // Прямое использование строки
+        messagesDiv.appendChild(messageElement);
+    }
+
+    function loadFruits() {
+        const filter = document.getElementById('filter').value;
+        let url = '/fruit/api/all';
+        if (filter === 'exotic') {
+            url = '/fruit/api/all_exotic';
+        } else if (filter === 'good') {
+            url = '/fruit/api/all_good';
+        } else if (filter === 'bad') {
+            url = '/fruit/api/all_bad';
+        }
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const fruitList = document.getElementById('fruitList');
+                fruitList.innerHTML = '';
+                data.forEach(fruit => {
+                    const li = document.createElement('li');
+                    li.textContent = `${fruit.name} (${fruit.color}) - ${translateFruitType(fruit.type)}`;
+                    li.onclick = () => window.location.href = `/fruit/concrete/${fruit.id}`; // Переход на страницу фрукта
+                    fruitList.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Ошибка:', error));
+    }
+
+    function translateFruitType(type) {
+        switch (type) {
+            case 'EXOTIC': return 'Экзотический';
+            case 'GOOD': return 'Хороший';
+            case 'BAD': return 'Плохой';
+            default: return 'Неизвестный';
+        }
+    }
+
+    // Загрузка фруктов при загрузке страницы
+    window.onload = function() {
+        loadFruits();
+        connect(); // Подключаемся к WebSocket при загрузке страницы
+    };
+</script>
+</body>
+</html>

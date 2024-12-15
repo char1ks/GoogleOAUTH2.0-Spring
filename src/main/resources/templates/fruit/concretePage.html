@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали фрукта</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .fruit-details {
+            margin-top: 20px;
+        }
+        .fruit-details p {
+            margin: 10px 0;
+        }
+        .favorite-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .favorite-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Детали фрукта</h1>
+    <div class="fruit-details" id="fruitDetails">
+        <!-- Здесь будут отображаться детали фрукта -->
+    </div>
+    <button class="favorite-button" id="addToFavorite">Добавить в любимое</button>
+</div>
+<script>
+    // Пример загрузки данных для конкретного фрукта
+    const fruitId = window.location.pathname.split('/').pop();
+    fetch(`/fruit/api/concrete/${fruitId}`)
+        .then(response => response.json())
+        .then(data => {
+            const fruitDetails = document.getElementById('fruitDetails');
+            fruitDetails.innerHTML = `
+                <p><strong>Название:</strong> ${data.name}</p>
+                <p><strong>Цвет:</strong> ${data.color}</p>
+                <p><strong>Вес:</strong> ${data.weight} г</p>
+                <p><strong>Цена:</strong> ${data.price} руб.</p>
+                <p><strong>Тип:</strong> ${data.type}</p>
+            `;
+        })
+        .catch(error => console.error('Ошибка:', error));
+
+    // Обработчик события для кнопки "Добавить в любимое"
+    document.getElementById('addToFavorite').addEventListener('click', function() {
+        fetch(`/fruit/api/buy/${fruitId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Фрукт добавлен в любимое!');
+            } else {
+                alert('Ошибка при добавлении фрукта в любимое.');
+            }
+        })
+        .catch(error => console.error('Ошибка:', error));
+    });
+</script>
+</body>
+</html>
